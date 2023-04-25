@@ -15,28 +15,27 @@
   <canvas id="usage-chart"></canvas>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-
-    // const secrets = apiKey;
-
-    // 设置OpenAI API密钥
-
-
-    // 获取API密钥的到期时间
-
+    <!-- 定义一个名为 checkUsage 的函数 -->
     function checkUsage() {
+      // 获取文本框中输入的 API Key 值
       var apiKey = document.getElementById("api-key").value;
-      getOpenAIUsage(apiKey).then(function (data) {
-        var usage = document.getElementById("usage");
-        usage.innerHTML = "Remaining Requests: " + data.remaining_requests;
-        var usageChart = document.getElementById("usage-chart");
-        usageChart.style.display = "block";
+      // 获取页面上 id 为 usage 的元素
+      var usage = document.getElementById("usage");
+
+      // 调用 checkBill 函数，并使用 Promise 处理返回结果
+      checkBill(apiKey).then((data) => {
+        // 将获取到的数据显示在页面上
+        usage.innerHTML = "Remaining Requests: " + data[2].toFixed(2);
+
+        // 获取 id 为 usage-chart 的元素，绘制图表
+        var usageChart = document.getElementById("usage-chart").getContext('2d');
         var myChart = new Chart(usageChart, {
           type: 'bar',
           data: {
             labels: ['Remaining Requests', 'Used Requests'],
             datasets: [{
               label: 'API Usage',
-              data: [data.remaining_requests, data.used_requests],
+              data: [data[2], data[1]],
               backgroundColor: [
                 'rgba(54, 162, 235, 0.2)',
                 'rgba(255, 99, 132, 0.2)'
@@ -58,6 +57,9 @@
             }
           }
         });
+      }).catch((err) => {
+        // 处理 Promise 执行失败的情况
+        console.error("查询数据失败", err);
       });
     }
   </script>
