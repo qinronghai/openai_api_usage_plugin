@@ -69,11 +69,11 @@ async function checkBill(apiKey, date) {
     console.log(`Used:${totalUsage.toFixed(2)}`);
     console.log(`Remaining:${remainingAmount.toFixed(2)}`);
 
-    return [totalAmount, totalUsage, remainingAmount];
+    return [totalAmount, totalUsage, remainingAmount, subscripttionData];
   } catch (error) {
     console.error(error);
     alert("你无法访问OpenAI，可能是网络IP的问题。");
-    return [null, null, null];
+    return [null, null, null, null];
   }
 }
 

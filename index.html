@@ -1,68 +1,108 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <title>OpenAI API Key Checker</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="output.css" />
+    <script src="openai.js"></script>
+  </head>
 
-<head>
-  <title>OpenAI API Key Checker</title>
-  <script src="openai.js"></script>
-</head>
+  <body class="flex h-screen items-center justify-center bg-gray-200">
+    <!-- 卡片外框 -->
+    <div class="max-w-3/5 rounded-lg bg-white">
+      <!-- 卡片内框 -->
+      <div class="flex h-auto flex-col items-center justify-center">
+        <!-- 标题栏 -->
+        <div class="w-full rounded-tl-lg rounded-tr-lg bg-blue-400 px-2 pb-2 pt-2 text-left font-bold">OpenAI API Key Checker</div>
+        <!-- api输入部分 -->
+        <div class="w-full px-2 pb-1">
+          <div class="pb-1 pt-1" for="api-key">API Key:</div>
+          <input
+            class="rounded-md border border-black hover:border-purple-500 focus:border-purple-500 focus:outline-none"
+            placeholder="请输入您的API密钥：sk-"
+            type="text"
+            id="api-key"
+            name="api-key"
+            autocomplete="on"
+          />
+        </div>
+        <!-- 按钮 -->
+        <button
+          onclick="checkUsage()"
+          class="my-2.5 rounded-xl border border-purple-200 px-4 py-1 text-sm font-semibold text-purple-600 hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+        >
+          Check Usage
+        </button>
+        <!-- 账户信息展示 -->
+        <div id="account-info" class="flex w-full flex-col px-2 pb-1">
+          <div id="account-name"></div>
+          <div id="account-plan"></div>
+          <div id="usage"></div>
+          <div id="expiration-time"></div>
+        </div>
+      </div>
+      <!-- 图表 -->
+      <canvas id="usage-chart" class="hidden"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      <!-- 定义一个名为 checkUsage 的函数 -->
+      function checkUsage() {
+        // 获取文本框中输入的 API Key 值
+        var apiKey = document.getElementById("api-key").value;
+        // 获取账户信息展示部分的元素id
+        var accountName = document.getElementById("account-name");
+        var accountPlan = document.getElementById("account-plan");
+        var usage = document.getElementById("usage");
+        var expirationTime = document.getElementById("expiration-time");
 
-<body>
-  <h1>OpenAI API Key Checker</h1>
-  <label for="api-key">API Key:</label>
-  <input type="text" id="api-key" name="api-key" autocomplete="on"><br><br>
-  <button onclick="checkUsage()">Check Usage</button><br><br>
-  <div id="usage"></div>
-  <canvas id="usage-chart"></canvas>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    <!-- 定义一个名为 checkUsage 的函数 -->
-    function checkUsage() {
-      // 获取文本框中输入的 API Key 值
-      var apiKey = document.getElementById("api-key").value;
-      // 获取页面上 id 为 usage 的元素
-      var usage = document.getElementById("usage");
-
-      // 调用 checkBill 函数，并使用 Promise 处理返回结果
-      checkBill(apiKey).then((data) => {
-        // 将获取到的数据显示在页面上
-        usage.innerHTML = "Remaining Requests: " + data[2].toFixed(2);
-
-        // 获取 id 为 usage-chart 的元素，绘制图表
-        var usageChart = document.getElementById("usage-chart").getContext('2d');
-        var myChart = new Chart(usageChart, {
-          type: 'bar',
-          data: {
-            labels: ['Remaining Requests', 'Used Requests'],
-            datasets: [{
-              label: 'API Usage',
-              data: [data[2], data[1]],
-              backgroundColor: [
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 99, 132, 0.2)'
-              ],
-              borderColor: [
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 99, 132, 1)'
-              ],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            scales: {
-              yAxes: [{
-                ticks: {
-                  beginAtZero: true
-                }
-              }]
-            }
-          }
-        });
-      }).catch((err) => {
-        // 处理 Promise 执行失败的情况
-        console.error("查询数据失败", err);
-      });
-    }
-  </script>
-</body>
-
+        // 调用 checkBill 函数，并使用 Promise 处理返回结果
+        checkBill(apiKey)
+          .then((data) => {
+            console.log(data, "black data");
+            // 将获取到的数据显示在页面上的账户信息展示部分
+            accountName.innerHTML = "Account Name: " + data[3].account_name;
+            accountPlan.innerHTML = "Plans: " + data[3].hard_limit_usd;
+            usage.innerHTML = "Remaining Requests: " + data[2].toFixed(2) + "$";
+            accountPlan.innerHTML = "Expiration Time: " + data[3].access_until;
+            // 数据回来后移除hidden类
+            usage.classList.remove("hidden");
+            // 获取 id 为 usage-chart 的元素，绘制图表
+            var usageChart = document.getElementById("usage-chart").getContext("2d");
+            var myChart = new Chart(usageChart, {
+              type: "bar",
+              data: {
+                labels: ["Remaining Requests", "Used Requests"],
+                datasets: [
+                  {
+                    label: "API Usage",
+                    data: [data[2], data[1]],
+                    backgroundColor: ["rgba(54, 162, 235, 0.2)", "rgba(255, 99, 132, 0.2)"],
+                    borderColor: ["rgba(54, 162, 235, 1)", "rgba(255, 99, 132, 1)"],
+                    borderWidth: 1,
+                  },
+                ],
+              },
+              options: {
+                scales: {
+                  yAxes: [
+                    {
+                      ticks: {
+                        beginAtZero: true,
+                      },
+                    },
+                  ],
+                },
+              },
+            });
+          })
+          .catch((err) => {
+            // 处理 Promise 执行失败的情况
+            console.error("查询数据失败", err);
+          });
+      }
+    </script>
+  </body>
 </html>
