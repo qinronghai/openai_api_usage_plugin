@@ -31,10 +31,25 @@
         <!-- 按钮 -->
         <button
           onclick="checkUsage()"
-          class="my-2.5 rounded-xl border border-purple-200 px-4 py-1 text-sm font-semibold text-purple-600 hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+          class="my-2.5 inline-flex rounded border border-purple-200 bg-purple-600 px-4 py-2 font-bold text-white hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
         >
-          Check Usage
+          <span id="loading-indicator" class="hidden">
+            <svg class="mr-3 h-5 w-5 animate-spin" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path
+                class="stroke-current opacity-75"
+                fill="none"
+                stroke-dasharray="calc(2 * 3.14 * 10 * 0.25) calc(2 * 3.14 * 10)"
+                stroke-dashoffset="0"
+                stroke-linecap="round"
+                stroke-width="4"
+                d="M 12 2 A 10 10 0 0 0 12 22"
+              ></path>
+            </svg>
+          </span>
+          <span id="button-text">Check Usage</span>
         </button>
+
         <!-- 账户信息展示 -->
         <div id="account-info" class="flex w-full flex-col px-2 pb-1">
           <div id="account-name"></div>
@@ -50,8 +65,13 @@
     <script>
       <!-- 定义一个名为 checkUsage 的函数 -->
       function checkUsage() {
+        // 显示加载指示器
+        const loadingIndicator = document.getElementById("loading-indicator");
+        loadingIndicator.classList.remove("hidden");
+
         // 获取文本框中输入的 API Key 值
         var apiKey = document.getElementById("api-key").value;
+
         // 获取账户信息展示部分的元素id
         var accountName = document.getElementById("account-name");
         var accountPlan = document.getElementById("account-plan");
@@ -61,14 +81,22 @@
         // 调用 checkBill 函数，并使用 Promise 处理返回结果
         checkBill(apiKey)
           .then((data) => {
-            console.log(data, "black data");
+            //加载指示器消失
+            const loadingIndicator = document.getElementById("loading-indicator");
+            loadingIndicator.classList.add("hidden");
+            //将图表显示到页面上
+            usage.classList.remove("hidden");
+
             // 将获取到的数据显示在页面上的账户信息展示部分
             accountName.innerHTML = "Account Name: " + data[3].account_name;
             accountPlan.innerHTML = "Plans: " + data[3].hard_limit_usd;
             usage.innerHTML = "Remaining Requests: " + data[2].toFixed(2) + "$";
-            accountPlan.innerHTML = "Expiration Time: " + data[3].access_until;
-            // 数据回来后移除hidden类
-            usage.classList.remove("hidden");
+
+            // 处理到期时间
+            let dateString = new Date(data[3].access_until * 1000);
+            dateString = dateString.toISOString().substr(0, 10);
+            expirationTime.innerHTML = "Expiration Time: " + dateString;
+
             // 获取 id 为 usage-chart 的元素，绘制图表
             var usageChart = document.getElementById("usage-chart").getContext("2d");
             var myChart = new Chart(usageChart, {
