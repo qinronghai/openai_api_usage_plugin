@@ -9,10 +9,12 @@ async function checkBill(apiKey, date) {
   startDate = new Date(now - 90 * 24 * 60 * 60 * 1000); // 现在的时间往前80天，因为4月1号到期了，现在是7月1号到期。初步推断api的寿命为90天。
   const endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 当前日期往后算一天
 
+  console.log(startDate, endDate);
+
   // 余量信息-请求地址
-  var urlUsage = `https://api.openai.com/v1/dashboard/billing/usage?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}`;
+  var urlUsage = `https://api.askgptai.tech/v1/dashboard/billing/usage?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}`;
   // 订阅信息-请求地址
-  const urlSubscription = "https://api.openai.com/v1/dashboard/billing/subscription";
+  const urlSubscription = "https://api.askgptai.tech/v1/dashboard/billing/subscription";
   const headers = {
     "Content-Type": "application/json",
     Authorization: "Bearer " + apiKey,
@@ -26,7 +28,8 @@ async function checkBill(apiKey, date) {
 
     // 检测响应是否成功
     if (!response.ok) {
-      console.log("您的账号已被封禁，请登录OpenAI进行查看");
+      console.log("您的账号不存在或者已被封禁，请登录OpenAI进行查看");
+      alert("您的账号不存在或者已被封禁，请登录OpenAI进行查看");
       return;
     }
     // 解析响应-订阅数据

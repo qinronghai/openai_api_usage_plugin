@@ -11,7 +11,7 @@
 
   <body class="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-white to-gray-200">
     <!-- 卡片外框 -->
-    <div class="transition-width w-full rounded-lg bg-white duration-1000 sm:w-625px xl:w-785px 2xl:w-885px">
+    <div class="transition-width w-full rounded-xl bg-white drop-shadow-2xl duration-1000 sm:w-625px xl:w-785px 2xl:w-885px">
       <!-- 卡片内框 -->
       <div class="flex h-auto w-full flex-col items-center justify-center p-8">
         <!-- 标题栏 -->
@@ -26,10 +26,11 @@
             id="api-key"
             name="api-key"
             autocomplete="on"
+            required
           />
           <!-- 按钮 -->
           <button
-            onclick="checkUsage()"
+            onclick="handleClickCheck()"
             class="my-2.5 inline-flex rounded border border-purple-200 bg-purple-600 px-4 py-2 font-bold text-white hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
           >
             <span id="loading-indicator" class="hidden">
@@ -51,11 +52,44 @@
         </div>
 
         <!-- 账户信息展示 -->
-        <div id="account-info" class="flex w-full flex-col px-2 pb-1">
-          <div id="account-name"></div>
-          <div id="account-plan"></div>
-          <div id="usage"></div>
-          <div id="expiration-time"></div>
+        <div id="account-info" class="flex w-full flex-col rounded-tl-md rounded-tr-md bg-gray-100 shadow-xl">
+          <div class="">
+            <table class="w-full divide-y divide-gray-300">
+              <tbody class="divide-y divide-gray-300">
+                <tr class="flex items-center justify-center">
+                  <td class="p-2 text-center" colspan="2">
+                    <table>
+                      <tr>
+                        <td class="mr-2 text-gray-600">用户名称</td>
+                        <td id="account-name" class="pl-1 text-left">Tang LuPing</td>
+                      </tr>
+                      <tr>
+                        <td class="mr-2 text-gray-600">到期时间</td>
+                        <td id="expiration-time" class="pl-1 text-left">2023-05-01</td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td class="flex-1 p-2 text-center">
+                    <p id="account-plan" class="text-xl font-semibold">18</p>
+                    <p class="text-sm text-gray-600">总额度</p>
+                  </td>
+                  <td class="flex-1 p-2 text-center">
+                    <p id="has-been-us" class="text-xl font-semibold">14.97</p>
+                    <p class="text-sm text-gray-600">已用额度</p>
+                  </td>
+                  <td class="flex-1 p-2 text-center">
+                    <p id="usage" class="text-xl font-semibold">3.03</p>
+                    <p class="text-sm text-gray-600">剩余额度</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="5" class="bg-gray-300">
+                    <div id="progress" class="h-4 bg-green-500" style="width: 75%"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <!-- 图表 -->
         <canvas id="usage-chart" class="hidden"></canvas>
@@ -64,17 +98,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       <!-- 定义一个名为 checkUsage 的函数 -->
-      function checkUsage() {
+      function handleClickCheck() {
+        // 检查input框是否为空
+        const input = document.getElementById("api-key");
+        if (input.value.trim() === "") {
+          alert("您还未输入api key。");
+          return;
+        } else {
+          // 检查api key是否有效
+          // 获取文本框中输入的 API Key 值
+          var apiKey = input.value;
+          let regex = /^sk-[a-zA-Z0-9]{48}$/;
+          if (regex.test(apiKey)) {
+            console.log("格式正确。");
+          } else {
+            alert("您输入的api格式不正确。");
+            return;
+          }
+        }
         // 显示加载指示器
         const loadingIndicator = document.getElementById("loading-indicator");
         loadingIndicator.classList.remove("hidden");
 
-        // 获取文本框中输入的 API Key 值
-        var apiKey = document.getElementById("api-key").value;
-
         // 获取账户信息展示部分的元素id
         var accountName = document.getElementById("account-name");
         var accountPlan = document.getElementById("account-plan");
+        var hasBeenUs = document.getElementById("has-been-us");
         var usage = document.getElementById("usage");
         var expirationTime = document.getElementById("expiration-time");
 
@@ -88,14 +137,29 @@
             usage.classList.remove("hidden");
 
             // 将获取到的数据显示在页面上的账户信息展示部分
-            accountName.innerHTML = "Account Name: " + data[3].account_name;
-            accountPlan.innerHTML = "Plans: " + data[3].hard_limit_usd;
-            usage.innerHTML = "Remaining Requests: " + data[2].toFixed(2) + "$";
+            accountName.innerHTML = data[3].account_name;
+            accountPlan.innerHTML = data[3].hard_limit_usd;
+            hasBeenUs.innerHTML = (data[3].hard_limit_usd - data[2]).toFixed(2);
+            usage.innerHTML = data[2].toFixed(2);
+
+            // 展示进度条
+            // 获取进度条元素
+            var progressBar = document.getElementById("progress");
+
+            // 假设总量是100，剩余量为50
+            var total = data[3].hard_limit_usd;
+            var remaining = data[2].toFixed(2);
+
+            // 计算剩余量的百分比
+            var percent = (remaining / total) * 100;
+
+            // 设置进度条的宽度为剩余量的百分比
+            progressBar.style.width = percent + "%";
 
             // 处理到期时间
             let dateString = new Date(data[3].access_until * 1000);
             dateString = dateString.toISOString().substr(0, 10);
-            expirationTime.innerHTML = "Expiration Time: " + dateString;
+            expirationTime.innerHTML = dateString;
 
             // 获取 id 为 usage-chart 的元素，绘制图表
             var usageChart = document.getElementById("usage-chart").getContext("2d");
@@ -131,6 +195,8 @@
             console.error("查询数据失败", err);
           });
       }
+
+      function validateApiKey() {}
     </script>
   </body>
 </html>
