@@ -52,10 +52,9 @@
         </div>
 
         <!-- 账户信息展示 -->
-        <div id="account-info" class="flex w-full flex-col rounded-tl-md rounded-tr-md bg-gray-100 shadow-xl">
-          <div class="">
-            <table class="w-full divide-y divide-gray-300">
-              <tbody class="divide-y divide-gray-300">
+        <div id="account-info" class="flex w-full flex-col rounded-tl-md rounded-tr-md bg-gray-100 shadow-xl">         
+            <table class="w-full">
+              <tbody>
                 <tr class="flex items-center justify-center">
                   <td class="p-2 text-center" colspan="2">
                     <table>
@@ -83,13 +82,16 @@
                   </td>
                 </tr>
                 <tr>
-                  <td colspan="5" class="bg-gray-300">
-                    <div id="progress" class="h-4 bg-green-500" style="width: 75%"></div>
+                  <td colspan="5" class="rounded bg-gray-300">
+                    <div
+                      id="progress"
+                      class="h-4 animate-pulse rounded bg-gradient-to-r from-green-500 to-purple-500"
+                      style="width: 75%"
+                    ></div>
                   </td>
                 </tr>
               </tbody>
-            </table>
-          </div>
+            </table>          
         </div>
         <!-- 图表 -->
         <canvas id="usage-chart" class="hidden"></canvas>
@@ -153,6 +155,14 @@
             // 计算剩余量的百分比
             var percent = (remaining / total) * 100;
 
+            // 余量预警
+            if (percent < 50 && percent > 30) {
+              progressBar.classList.remove("bg-gradient-to-r", "from-green-500", "to-purple-500");
+              progressBar.classList.add("bg-yellow-500");
+            } else if (percent <= 30) {
+              progressBar.classList.remove("bg-gradient-to-r", "from-green-500", "to-purple-500");
+              progressBar.classList.add("bg-red-500");
+            }
             // 设置进度条的宽度为剩余量的百分比
             progressBar.style.width = percent + "%";
 

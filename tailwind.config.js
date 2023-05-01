@@ -7,6 +7,10 @@ module.exports = {
         "625px": "625px",
         "785px": "785px",
         "885px": "885px",
+        "80%": "80%",
+        "50%": "50%",
+        "20%": "20%",
+        custom: "var(--custom-width)",
       },
     },
     screens: {
