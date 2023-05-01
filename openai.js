@@ -54,6 +54,21 @@ async function checkBill(apiKey, date) {
     usageData = await response.json();
     totalUsage = usageData.total_usage / 100;
 
+    // 获取最近7日使用数据
+    const lastSevenDaysItems = usageData.daily_costs.slice(-7); //近七日的消耗总数据list
+    // 近七日的消耗总和sum
+    const totalCostForLastSevenDays = lastSevenDaysItems.reduce((accumulator, currentValue) => {
+      const dailyCost = currentValue.line_items.reduce((sum, item) => sum + item.cost, 0);
+      return accumulator + dailyCost;
+    }, 0);
+    // 近七日的每日消耗array
+    const dailyCostsForSevenDays = lastSevenDaysItems.map((day) => day.line_items.reduce((sum, item) => sum + item.cost, 0));
+    // nearlySevenDaysTimes
+    const nearlySevenDaysTimes = lastSevenDaysItems.map((item) => {
+      let dateString = new Date(item.timestamp * 1000);
+      return dateString.toISOString().substr(0, 10);
+    });
+
     // 如果用户绑卡，额度每月会刷新
     if (is_subsrcibed) {
       const thisMonthIsPastDays = now.getDate(); // 获取当月已过去的天数
@@ -72,7 +87,13 @@ async function checkBill(apiKey, date) {
     console.log(`Used:${totalUsage.toFixed(2)}`);
     console.log(`Remaining:${remainingAmount.toFixed(2)}`);
 
-    return [totalAmount, totalUsage, remainingAmount, subscripttionData];
+    return [
+      totalAmount,
+      totalUsage,
+      remainingAmount,
+      subscripttionData,
+      { lastSevenDaysItems, totalCostForLastSevenDays, dailyCostsForSevenDays, nearlySevenDaysTimes },
+    ];
   } catch (error) {
     console.error(error);
     alert("你无法访问OpenAI，可能是网络IP的问题。");
