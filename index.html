@@ -19,20 +19,24 @@
         <!-- api输入部分 -->
         <div class="inline-flex w-full items-center px-2 pb-1">
           <div class="mr-6" for="api-key">API Key:</div>
-          <div class="relative mr-3 w-full flex-1">
-            <input
-              class="h-10 w-full rounded-md border border-gray-400 px-2 hover:border-purple-500 focus:border-purple-500 focus:bg-white focus:outline-none"
-              placeholder="请输入您的API密钥：sk-"
-              type="text"
-              id="api-key"
-              name="api-key"
-              autocomplete="on"
-              required
-            />
-            <ul
-              id="api-key-list"
-              class="absolute left-0 right-0 top-12 z-10 hidden max-h-40 select-none overflow-y-auto rounded-md border border-gray-400 bg-white"
-            ></ul>
+          <div class="mr-3 w-full flex-1">
+            <form class="flex flex-col" action="">
+              <input
+                class="h-10 w-full rounded-md border border-gray-400 px-2 hover:border-purple-500 focus:border-purple-500 focus:bg-white focus:outline-none"
+                placeholder="请输入您的API密钥：sk-"
+                type="text"
+                id="api-key"
+                name="api-key"
+                autocomplete="off"
+                required
+                list="api-key-list"
+              />
+              <datalist id="api-key-list">
+                <option value=""></option>
+                <option value=""></option>
+                <option value=""></option>
+              </datalist>
+            </form>
           </div>
 
           <!-- 按钮 -->
@@ -106,24 +110,45 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+      // 初始化自动加载apikey
+      const apiKeyList = document.getElementById("api-key-list");
+      var apiKey = localStorage.getItem("api-Key");
+      if (apiKey !== "" && checkAPIFormat(apiKey)) {
+        apiKeyList.querySelectorAll("option")[0].value = apiKey;
+      }
+
+      // 校验api格式
+      function checkAPIFormat(api) {
+        // 检查api key是否有效
+        let regex = /^sk-[a-zA-Z0-9]{48}$/;
+        return regex.test(api);
+      }
+
+      // check点击事件
       function handleClickCheck() {
         // 检查input框是否为空
         const input = document.getElementById("api-key");
+        const apiKeyList = document.getElementById("api-key-list");
         if (input.value.trim() === "") {
           alert("您还未输入api key。");
           return;
         } else {
-          // 检查api key是否有效
-          // 获取文本框中输入的 API Key 值
-          var apiKey = input.value;
-          let regex = /^sk-[a-zA-Z0-9]{48}$/;
-          if (regex.test(apiKey)) {
+          if (checkAPIFormat(input.value)) {
             console.log("格式正确。");
+            let key = localStorage.getItem("api-Key");
+            if (key.trim() == "") {
+              let res = confirm("是否将此api-key存储到本地，以方便往后的查询？");
+              if (res) {
+                // 存储到本地并设置datalist的值
+                localStorage.setItem("api-Key", apiKey);
+              }
+            }
           } else {
             alert("您输入的api格式不正确。");
             return;
           }
         }
+
         // 显示加载指示器
         const loadingIndicator = document.getElementById("loading-indicator");
         loadingIndicator.classList.remove("hidden");
@@ -177,6 +202,9 @@
 
             // 处理到期时间
             let dateString = new Date(data[3].access_until * 1000);
+            if (dateString < Date.now()) {
+              accountName.innerHTML = data[3].account_name + "❌";
+            }
             dateString = dateString.toISOString().substr(0, 10);
             expirationTime.innerHTML = dateString;
 
