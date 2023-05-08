@@ -3,3 +3,10 @@ reference_item/
 node_modules/
 
 tailwind.css
+
+tailwind.config.js
+
+tempCodeRunnerFile.js
+
+package*
+*config.js
