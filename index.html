@@ -138,7 +138,7 @@
             console.log("格式正确。");
             let localStoragekey = localStorage.getItem("api-Key");
             console.log(localStoragekey.trim());
-            if (localStoragekey.trim() != apiKey) {
+            if (localStoragekey.trim() == "" || localStoragekey.trim() != apiKey) {
               let res = confirm("检测本地没有此api-key，是否将此api-key存储到本地，以方便往后的查询？");
               if (res) {
                 // 存储到本地并设置datalist的值
